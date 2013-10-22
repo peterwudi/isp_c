@@ -1,51 +1,25 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
+#include "string.h"
 
-#ifndef FALSE
-#define FALSE   (0)
-#endif
-
-#ifndef TRUE
-#define TRUE    (!FALSE)
-#endif
-
+#include "header\rgb_basic.h"
+#include "header\imgproc.h"
 
 /*
 	Read a BMP file
-	Write out RGB, and binary form
+	Write out RGB, and binary form,
+	Filter the image
 */
 
-typedef struct {
-   unsigned short int type;                 /* Magic identifier            */
-   unsigned int size;                       /* File size in bytes          */
-   unsigned short int reserved1, reserved2;
-   unsigned int offset;                     /* Offset to image data, bytes */
-} HEADER;
-
-typedef struct {
-   unsigned int size;               /* Header size in bytes      */
-   int width,height;                /* Width and height of image */
-   unsigned short int planes;       /* Number of colour planes   */
-   unsigned short int bits;         /* Bits per pixel            */
-   unsigned int compression;        /* Compression type          */
-   unsigned int imagesize;          /* Image size in bytes       */
-   int xresolution,yresolution;     /* Pixels per meter          */
-   unsigned int ncolours;           /* Number of colours         */
-   unsigned int importantcolours;   /* Important colours         */
-} INFOHEADER;
-
-typedef struct {
-   unsigned char r,g,b,junk;
-} COLOURINDEX;
-
-int main(int argc,char **argv)
+void bmpToRGB(char *inFilename, int proc)
 {
 	int				i,j					= 0;
+	int				tmp					= 0;
 	int				gotindex			= FALSE;
 	unsigned char	r, g, b, pad		= '\0';
 	int				padSize				= 0;
-	char			buf[50]				= {0};
+	char			*buf				= NULL;
 	HEADER			header				= {0};
 	INFOHEADER		infoheader			= {0};
 	COLOURINDEX		colourindex[256]	= {0};
@@ -60,48 +34,57 @@ int main(int argc,char **argv)
 	FILE			*gIntFile	= NULL;
 	FILE			*bIntFile	= NULL;
 
+	FILE			*oFile		= NULL;
+	pixel			**image		= NULL;
+
+
 	// Check arguments
-	if (argc != 2) {
-		fprintf(stderr,"Usage: %s inFilename\n",argv[0]);
+	if (inFilename == NULL) {
+		fprintf(stderr,"inFilename ptr is NULL\n");
 		exit(-1);
 	}
 
 	// Open file
-	if ((fptr = fopen(argv[1],"rb")) == NULL) {
-		fprintf(stderr,"Unable to open BMP file \"%s\"\n",argv[1]);
+	if ((fptr = fopen(inFilename,"r+b")) == NULL) {
+		fprintf(stderr,"Unable to open BMP file \"%s\"\n",inFilename);
 		exit(-1);
 	}
 
-	if ((rgbFile = fopen("rgb","wb")) == NULL) {
+	if ((rgbFile = fopen("output\\rgb","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"rgb\"\n");
 		exit(-1);
 	}
-	if ((rFile = fopen("r","wb")) == NULL) {
+	if ((rFile = fopen("output\\r","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"r\"\n");
 		exit(-1);
 	}
-	if ((gFile = fopen("g","wb")) == NULL) {
+	if ((gFile = fopen("output\\g","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"g\"\n");
 		exit(-1);
 	}
-	if ((bFile = fopen("b","wb")) == NULL) {
+	if ((bFile = fopen("output\\b","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"b\"\n");
 		exit(-1);
 	}
-	if ((rgbIntFile = fopen("rgbIntFile","wb")) == NULL) {
+	if ((rgbIntFile = fopen("output\\rgbIntFile","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"rgbIntFile\"\n");
 		exit(-1);
 	}
-	if ((rIntFile = fopen("rIntFile","wb")) == NULL) {
+	if ((rIntFile = fopen("output\\rIntFile","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"rIntFile\"\n");
 		exit(-1);
 	}
-	if ((gIntFile = fopen("gIntFile","wb")) == NULL) {
+	if ((gIntFile = fopen("output\\gIntFile","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"gIntFile\"\n");
 		exit(-1);
 	}
-	if ((bIntFile = fopen("bIntFile","wb")) == NULL) {
+	if ((bIntFile = fopen("output\\bIntFile","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"bIntFile\"\n");
+		exit(-1);
+	}
+
+	if ((oFile = fopen("output\\outImg.bmp","wb")) == NULL) {
+		fprintf(stderr,"Unable to open output file \"outImg.bmp\"\n");
 		exit(-1);
 	}
 
@@ -164,6 +147,13 @@ int main(int argc,char **argv)
 	// Seek to the start of the image data
 	fseek(fptr, header.offset, SEEK_SET);
 
+	image = (pixel **)malloc(sizeof(pixel *) * infoheader.width);
+
+	for (i = 0; i < infoheader.width; i++)
+	{
+		image[i] = (pixel *)malloc(sizeof(pixel) * infoheader.height);
+	}
+
 	// Find out how many bytes of paddings
 	while ( ( infoheader.width*3 + padSize ) % 4 != 0 )
 	{
@@ -178,7 +168,7 @@ int main(int argc,char **argv)
 			if (infoheader.bits != 24)
 			{
 				fprintf(stderr, "not 24-bit RGB pixel, exiting\n");
-				return -1;
+				return;
 			}
 
 
@@ -209,6 +199,11 @@ int main(int argc,char **argv)
 			fprintf(gIntFile, "%d\n", (int)g);
 			fprintf(bIntFile, "%d\n", (int)b);
 			fprintf(rgbIntFile, "(%d, %d):\tr: %d,\tg: %d,\tb: %d,\n", i, j, (int)r, (int)g, (int)b);
+
+			// Record image
+			image[i][j].b	= b;
+			image[i][j].g	= g;
+			image[i][j].r	= r;
 		}
 	}
 
@@ -222,7 +217,65 @@ int main(int argc,char **argv)
 	fclose(gIntFile);
 	fclose(bIntFile);
 
-	printf("Press enter to exit...\n");
-	scanf("%c", buf);
+	if (proc == FALSE)
+	{
+		return;
+	}
+
+	// Operation function
+	//add50(image, infoheader.width, infoheader.height);
+	//emboss(image, infoheader.width, infoheader.height);
+	//takeleft(image, infoheader.width, infoheader.height);
+	sharpen(image, infoheader.width, infoheader.height);
+	
+	buf = (char *)malloc(sizeof(char) * header.offset);
+	
+	if ((fptr = fopen(inFilename,"r+b")) == NULL) {
+		fprintf(stderr,"Unable to open BMP file \"%s\" the 2nd time\n",inFilename);
+		exit(-1);
+	}
+
+	if (fread(buf, sizeof(char) * header.offset, 1, fptr) != 1)
+	{
+		fprintf(stderr,"copy header failed\n");
+		exit(-1);
+	}
+
+	fclose(fptr);
+
+	// Write the output file
+	tmp = fwrite(buf, sizeof(char), header.offset, oFile);
+	if (tmp != header.offset)
+	{
+		fprintf(stderr, "%d written to oFile, but the offset should be %d", tmp, header.offset);
+		exit(-1);	
+	}
+	
+	for (j = 0; j < infoheader.height; j++)
+	{
+		for (i = 0; i < infoheader.width; i++)
+		{
+			fwrite(&image[i][j].b, sizeof(unsigned char), 1, oFile); 
+			fwrite(&image[i][j].g, sizeof(unsigned char), 1, oFile);
+			fwrite(&image[i][j].r, sizeof(unsigned char), 1, oFile);
+		}
+
+		for (i = 0; i < padSize; i++)
+		{
+			if (fwrite(&pad, sizeof(unsigned char), 1, oFile)  != 1)
+			{
+				fprintf(stderr,"Image read pad failed\n");
+				exit(-1);
+			}
+		}
+
+	}
+
+	for (i = 0; i < infoheader.width; i++)
+	{
+		free(image[i]);
+	}
+	free(image);
+	fclose(oFile);
 }
 
