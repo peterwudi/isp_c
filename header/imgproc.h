@@ -11,3 +11,6 @@ void emboss(pixel **image, int width, int height);
 
 void sharpen(pixel **image, int width, int height);
 
+void bayer(pixel **image, int width, int height);
+
+

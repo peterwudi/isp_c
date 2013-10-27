@@ -208,3 +208,81 @@ void sharpen(pixel **image, int width, int height)
 	}
 	free(kernel);
 }
+
+void bayer(pixel **image, int width, int height)
+{
+	int i, j	= 0;	// Image iterator
+	int m, n	= 0;	// kernel iterator
+
+	int r, g, b	= 0;	// RGB result values
+	int x, y	= 0;	// result coordinate
+
+	pixel **result = NULL;
+
+	result = (pixel **)malloc(sizeof(pixel *) * width);
+
+	for (i = 0; i < width; i++)
+	{
+		result[i] = (pixel *)malloc(sizeof(pixel) * height);
+	}
+
+
+	// (0, height)----------------------------(width, height)
+	//	|											|
+	//	|											|
+	//	|											|
+	// (0, 0)---------------------------------(width, 0)
+	// R G R G R G
+	// G B G B G B
+	for (i = width - 1; i >= 0; i--)
+	{
+		for (j = height - 1; j >= 0; j--)
+		{
+			if (	((width-i-1) % 2) == 0 && ((height-j-1) % 2 == 0)
+				||	((width-i-1) % 2) == 1 && ((height-j-1) % 2 == 1))
+			{
+				// G
+				result[i][j].r = 0;
+				result[i][j].g = image[i][j].g;
+				result[i][j].b = 0;
+			}
+			else if (((width-i-1) % 2) == 1 && ((height-j-1) % 2 == 0))
+			{
+				// R
+				result[i][j].r = image[i][j].r;
+				result[i][j].g = 0;
+				result[i][j].b = 0;
+			}
+			else
+			{
+				// B
+				result[i][j].r = 0;
+				result[i][j].g = 0;
+				result[i][j].b = image[i][j].b;
+			}
+		}	
+	}
+
+
+	for(i = 0; i < width; i++) 
+	{
+		for(j = 0; j < height; j++) 
+		{
+			image[i][j].r = result[i][j].r;
+			image[i][j].g = result[i][j].g;
+			image[i][j].b = result[i][j].b;
+		}
+	}
+	for(i = 0; i < width; i++) 
+	{
+		free(result[i]);
+	}
+	free(result);
+
+}
+
+
+
+
+
+
