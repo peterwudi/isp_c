@@ -226,8 +226,8 @@ void bmpToRGB(char *inFilename, int proc)
 	//add50(image, infoheader.width, infoheader.height);
 	//emboss(image, infoheader.width, infoheader.height);
 	//takeleft(image, infoheader.width, infoheader.height);
-	//sharpen(image, infoheader.width, infoheader.height);
-	bayer(image, infoheader.width, infoheader.height);
+	sharpen(image, infoheader.width, infoheader.height);
+	//bayer(image, infoheader.width, infoheader.height);
 
 
 
