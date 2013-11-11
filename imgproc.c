@@ -11,7 +11,6 @@
    on pixels, then put the header back on. Only work on 24-bit
    pixel BMP files.
 */
-
 void conv_2d(int **kernel, int kernelSize, pixel **image, int width, int height, double factor, int bias)
 {
 	int i, j	= 0;	// Image iterator
@@ -93,6 +92,36 @@ void conv_2d(int **kernel, int kernelSize, pixel **image, int width, int height,
 		free(result[i]);
 	}
 	free(result);
+}
+
+
+void rgb2ycc (pixel **image, int width, int height)
+{
+	int		i			= 0;
+	int		y,cb,cr		= 0;
+
+
+	/*
+	Y     0.2988   0.5869   0.1143        R
+
+	Cb  = -0.1689  -0.3311  0.5000    X   G
+
+	Cr    0.5000   -0.4189  -0.0811       B
+	
+	16'sd9791,  16'sd19232,  16'sd3745,
+	-16'sd5535, -16'sd10849, 16'sd16384,
+	16'sd16384, -16'sd13727, -16'sd2657
+	*/
+
+	// Temporarily use rgb for ycbcr
+	y	= (*image)->r*9791 + (*image)->g*19232 + (*image)->b*3745;
+	cb	= (*image)->r*(-5535) - (*image)->g*10849 + (*image)->b*16384;
+	cr	= (*image)->r*16384 - (*image)->g*13727 - (*image)->b*2657;
+
+	(*image)->r = y;
+	(*image)->g = cb;
+	(*image)->b = cr;
+
 }
 
 // take the left pixel
