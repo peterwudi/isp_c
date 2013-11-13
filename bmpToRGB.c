@@ -25,10 +25,6 @@ void bmpToRGB(char *inFilename, int proc)
 	COLOURINDEX		colourindex[256]	= {0};
 	
 	FILE			*fptr		= NULL;
-	FILE			*rgbFile	= NULL;
-	FILE			*rFile		= NULL;
-	FILE			*gFile		= NULL;
-	FILE			*bFile		= NULL;
 	FILE			*rgbIntFile	= NULL;
 	FILE			*rIntFile	= NULL;
 	FILE			*gIntFile	= NULL;
@@ -50,22 +46,7 @@ void bmpToRGB(char *inFilename, int proc)
 		exit(-1);
 	}
 
-	if ((rgbFile = fopen("output\\rgb","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"rgb\"\n");
-		exit(-1);
-	}
-	if ((rFile = fopen("output\\r","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"r\"\n");
-		exit(-1);
-	}
-	if ((gFile = fopen("output\\g","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"g\"\n");
-		exit(-1);
-	}
-	if ((bFile = fopen("output\\b","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"b\"\n");
-		exit(-1);
-	}
+	
 	if ((rgbIntFile = fopen("output\\rgbIntFile","wb")) == NULL) {
 		fprintf(stderr,"Unable to open target file \"rgbIntFile\"\n");
 		exit(-1);
@@ -171,7 +152,6 @@ void bmpToRGB(char *inFilename, int proc)
 				return;
 			}
 
-
 			if (fread(&b, sizeof(unsigned char), 1, fptr) != 1) {
 				fprintf(stderr,"Image read failed\n");
 				exit(-1);
@@ -186,13 +166,13 @@ void bmpToRGB(char *inFilename, int proc)
 			}
 
 			// binary
-			fwrite (&r, 1 , sizeof(unsigned char) , rgbFile);
-			fwrite (&g, 1 , sizeof(unsigned char) , rgbFile);
-			fwrite (&b, 1 , sizeof(unsigned char) , rgbFile);
+			//fwrite (&r, 1 , sizeof(unsigned char) , rgbFile);
+			//fwrite (&g, 1 , sizeof(unsigned char) , rgbFile);
+			//fwrite (&b, 1 , sizeof(unsigned char) , rgbFile);
 
-			fwrite (&r , 1 , sizeof(unsigned char) , rFile);
-			fwrite (&g , 1 , sizeof(unsigned char) , gFile);
-			fwrite (&b , 1 , sizeof(unsigned char) , bFile);
+			//fwrite (&r , 1 , sizeof(unsigned char) , rFile);
+			//fwrite (&g , 1 , sizeof(unsigned char) , gFile);
+			//fwrite (&b , 1 , sizeof(unsigned char) , bFile);
 
 			// Integer
 			fprintf(rIntFile, "%d\n", (int)r);
@@ -208,10 +188,6 @@ void bmpToRGB(char *inFilename, int proc)
 	}
 
 	fclose(fptr);
-	fclose(rgbFile);
-	fclose(rFile);
-	fclose(gFile);
-	fclose(bFile);
 	fclose(rgbIntFile);
 	fclose(rIntFile);
 	fclose(gIntFile);
@@ -226,9 +202,9 @@ void bmpToRGB(char *inFilename, int proc)
 	//add50(image, infoheader.width, infoheader.height);
 	//emboss(image, infoheader.width, infoheader.height);
 	//takeleft(image, infoheader.width, infoheader.height);
-	sharpen(image, infoheader.width, infoheader.height);
+	//sharpen(image, infoheader.width, infoheader.height);
 	//bayer(image, infoheader.width, infoheader.height);
-
+	rgb2ycc(image, infoheader.width, infoheader.height);
 
 
 	buf = (char *)malloc(sizeof(char) * header.offset);

@@ -11,6 +11,96 @@
    on pixels, then put the header back on. Only work on 24-bit
    pixel BMP files.
 */
+
+
+// Must have opened valid file pointers
+void dump_pixel(pixel **image, int width, int height, FILE *a_out, FILE *b_out, FILE *c_out, int dumpRGB)
+{
+	int				i, j	= 0;
+	int				x, y, z = '\0';
+	
+	for (j = 0; j < height; j++)
+	{
+		for (i = 0; i < width; i++)
+		{
+			if (dumpRGB == 1)
+			{
+				x = (int)(image[i][j].b);
+				y = (int)(image[i][j].g);
+				z = (int)(image[i][j].r);
+			}
+			else
+			{
+				x = image[i][j].y;
+				y = image[i][j].cb;
+				z = image[i][j].cr;
+			}
+
+			// Integer
+			fprintf(a_out, "%d\n", x);
+			fprintf(b_out, "%d\n", y);
+			fprintf(c_out, "%d\n", z);
+		}
+	}
+}
+
+void rgb2ycc (pixel **image, int width, int height)
+{
+	int		i,j			= 0;
+	int		y,cb,cr		= 0;
+	FILE	*y_out, *cb_out,*cr_out = NULL;
+
+	if ((y_out = fopen("output\\y_out","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"y_out\"\n");
+		exit(-1);
+	}
+	
+	if ((cb_out = fopen("output\\cb_out","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"cb_out\"\n");
+		exit(-1);
+	}
+	if ((cr_out = fopen("output\\cr_out","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"cr_out\"\n");
+		exit(-1);
+	}
+
+	/*
+	Y     0.2988   0.5869   0.1143        R
+
+	Cb  = -0.1689  -0.3311  0.5000    X   G
+
+	Cr    0.5000   -0.4189  -0.0811       B
+	
+	17 bits after the decimal point
+
+	18'sd39164,  18'sd76926,  18'sd14982,
+	-18'sd22138, -18'sd43398, 18'sd65536,
+	18'sd65536, -18'sd54906, -18'sd10630
+	*/
+	
+	for (j = 0; j < height; j++)
+	{
+		for (i = 0; i < width; i++)
+		{
+ 			y	= ((int)image[i][j].r)*39164 + ((int)image[i][j].g)*76926 + ((int)image[i][j].b)*14982;
+			cb	= ((int)image[i][j].r)*(-22138) - ((int)image[i][j].g)*43398 + ((int)image[i][j].b)*65536;
+			cr	= ((int)image[i][j].r)*65536 - ((int)image[i][j].g)*54906 - ((int)image[i][j].b)*10630;
+
+			y	= y >> 8;
+			cb	= cb >> 8;
+			cr	= cr >> 8;
+
+			image[i][j].y	= y;
+			image[i][j].cb	= cb;
+			image[i][j].cr	= cr;
+		}
+	}
+
+	dump_pixel(image, width, height, y_out, cb_out, cr_out, 0);
+}
+
+
+
 void conv_2d(int **kernel, int kernelSize, pixel **image, int width, int height, double factor, int bias)
 {
 	int i, j	= 0;	// Image iterator
@@ -92,36 +182,6 @@ void conv_2d(int **kernel, int kernelSize, pixel **image, int width, int height,
 		free(result[i]);
 	}
 	free(result);
-}
-
-
-void rgb2ycc (pixel **image, int width, int height)
-{
-	int		i			= 0;
-	int		y,cb,cr		= 0;
-
-
-	/*
-	Y     0.2988   0.5869   0.1143        R
-
-	Cb  = -0.1689  -0.3311  0.5000    X   G
-
-	Cr    0.5000   -0.4189  -0.0811       B
-	
-	16'sd9791,  16'sd19232,  16'sd3745,
-	-16'sd5535, -16'sd10849, 16'sd16384,
-	16'sd16384, -16'sd13727, -16'sd2657
-	*/
-
-	// Temporarily use rgb for ycbcr
-	y	= (*image)->r*9791 + (*image)->g*19232 + (*image)->b*3745;
-	cb	= (*image)->r*(-5535) - (*image)->g*10849 + (*image)->b*16384;
-	cr	= (*image)->r*16384 - (*image)->g*13727 - (*image)->b*2657;
-
-	(*image)->r = y;
-	(*image)->g = cb;
-	(*image)->b = cr;
-
 }
 
 // take the left pixel

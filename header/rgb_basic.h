@@ -33,6 +33,6 @@ typedef struct {
 typedef struct
 {
 	unsigned char r, g, b;
+	int	y, cb, cr;
 } pixel;
-
 
