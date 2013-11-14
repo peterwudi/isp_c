@@ -48,19 +48,19 @@ void rgb2ycc (pixel **image, int width, int height)
 {
 	int		i,j			= 0;
 	int		y,cb,cr		= 0;
-	FILE	*y_out, *cb_out,*cr_out = NULL;
+	FILE	*yOut, *cbOut, *crOut = NULL;
 
-	if ((y_out = fopen("output\\y_out","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"y_out\"\n");
+	if ((yOut = fopen("output\\yOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"yOut\"\n");
 		exit(-1);
 	}
 	
-	if ((cb_out = fopen("output\\cb_out","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"cb_out\"\n");
+	if ((cbOut = fopen("output\\cbOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"cbOut\"\n");
 		exit(-1);
 	}
-	if ((cr_out = fopen("output\\cr_out","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"cr_out\"\n");
+	if ((crOut = fopen("output\\crOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"crOut\"\n");
 		exit(-1);
 	}
 
@@ -96,7 +96,11 @@ void rgb2ycc (pixel **image, int width, int height)
 		}
 	}
 
-	dump_pixel(image, width, height, y_out, cb_out, cr_out, 0);
+	dump_pixel(image, width, height, yOut, cbOut, crOut, 0);
+
+	fclose(yOut);
+	fclose(cbOut);
+	fclose(crOut);
 }
 
 
@@ -263,6 +267,21 @@ void sharpen(pixel **image, int width, int height)
 	double	factor		= 1.0;
 	int		bias		= 0;
 
+	FILE	*sharpenROut, *sharpenGOut, *sharpenBOut = NULL;
+
+	if ((sharpenROut = fopen("output\\sharpenROut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"yOut\"\n");
+		exit(-1);
+	}
+	
+	if ((sharpenGOut = fopen("output\\sharpenGOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"cbOut\"\n");
+		exit(-1);
+	}
+	if ((sharpenBOut = fopen("output\\sharpenBOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"crOut\"\n");
+		exit(-1);
+	}
 
 	kernel = (int **)malloc(sizeof(int *) * kernelSize);
 	
@@ -296,6 +315,13 @@ void sharpen(pixel **image, int width, int height)
 		free(kernel[i]);
 	}
 	free(kernel);
+
+	dump_pixel(image, width, height, sharpenROut, sharpenGOut, sharpenBOut, 0);
+
+	fclose(sharpenROut);
+	fclose(sharpenGOut);
+	fclose(sharpenBOut);
+
 }
 
 void bayer(pixel **image, int width, int height)

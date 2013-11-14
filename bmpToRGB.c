@@ -26,9 +26,9 @@ void bmpToRGB(char *inFilename, int proc)
 	
 	FILE			*fptr		= NULL;
 	FILE			*rgbIntFile	= NULL;
-	FILE			*rIntFile	= NULL;
-	FILE			*gIntFile	= NULL;
-	FILE			*bIntFile	= NULL;
+	FILE			*rOrig		= NULL;
+	FILE			*gOrig		= NULL;
+	FILE			*bOrig		= NULL;
 
 	FILE			*oFile		= NULL;
 	pixel			**image		= NULL;
@@ -51,16 +51,16 @@ void bmpToRGB(char *inFilename, int proc)
 		fprintf(stderr,"Unable to open target file \"rgbIntFile\"\n");
 		exit(-1);
 	}
-	if ((rIntFile = fopen("output\\rIntFile","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"rIntFile\"\n");
+	if ((rOrig = fopen("output\\rOrig","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"rOrig\"\n");
 		exit(-1);
 	}
-	if ((gIntFile = fopen("output\\gIntFile","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"gIntFile\"\n");
+	if ((gOrig = fopen("output\\gOrig","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"gOrig\"\n");
 		exit(-1);
 	}
-	if ((bIntFile = fopen("output\\bIntFile","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"bIntFile\"\n");
+	if ((bOrig = fopen("output\\bOrig","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"bOrig\"\n");
 		exit(-1);
 	}
 
@@ -175,9 +175,9 @@ void bmpToRGB(char *inFilename, int proc)
 			//fwrite (&b , 1 , sizeof(unsigned char) , bFile);
 
 			// Integer
-			fprintf(rIntFile, "%d\n", (int)r);
-			fprintf(gIntFile, "%d\n", (int)g);
-			fprintf(bIntFile, "%d\n", (int)b);
+			fprintf(rOrig, "%d\n", (int)r);
+			fprintf(gOrig, "%d\n", (int)g);
+			fprintf(bOrig, "%d\n", (int)b);
 			fprintf(rgbIntFile, "(%d, %d):\tr: %d,\tg: %d,\tb: %d,\n", i, j, (int)r, (int)g, (int)b);
 
 			// Record image
@@ -189,9 +189,9 @@ void bmpToRGB(char *inFilename, int proc)
 
 	fclose(fptr);
 	fclose(rgbIntFile);
-	fclose(rIntFile);
-	fclose(gIntFile);
-	fclose(bIntFile);
+	fclose(rOrig);
+	fclose(gOrig);
+	fclose(bOrig);
 
 	if (proc == FALSE)
 	{
@@ -205,7 +205,6 @@ void bmpToRGB(char *inFilename, int proc)
 	//sharpen(image, infoheader.width, infoheader.height);
 	//bayer(image, infoheader.width, infoheader.height);
 	rgb2ycc(image, infoheader.width, infoheader.height);
-
 
 	buf = (char *)malloc(sizeof(char) * header.offset);
 	
