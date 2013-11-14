@@ -25,9 +25,9 @@ void dump_pixel(pixel **image, int width, int height, FILE *a_out, FILE *b_out, 
 		{
 			if (dumpRGB == 1)
 			{
-				x = (int)(image[i][j].b);
+				x = (int)(image[i][j].r);
 				y = (int)(image[i][j].g);
-				z = (int)(image[i][j].r);
+				z = (int)(image[i][j].b);
 			}
 			else
 			{
@@ -316,7 +316,7 @@ void sharpen(pixel **image, int width, int height)
 	}
 	free(kernel);
 
-	dump_pixel(image, width, height, sharpenROut, sharpenGOut, sharpenBOut, 0);
+	dump_pixel(image, width, height, sharpenROut, sharpenGOut, sharpenBOut, 1);
 
 	fclose(sharpenROut);
 	fclose(sharpenGOut);
