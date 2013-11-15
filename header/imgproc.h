@@ -17,4 +17,6 @@ void sharpen(pixel **image, int width, int height);
 
 void bayer(pixel **image, int width, int height);
 
+void demosaic_neighbor(pixel **image, int width, int height);
+
 

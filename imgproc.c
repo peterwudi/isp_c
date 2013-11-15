@@ -327,10 +327,7 @@ void sharpen(pixel **image, int width, int height)
 void bayer(pixel **image, int width, int height)
 {
 	int i, j	= 0;	// Image iterator
-	int m, n	= 0;	// kernel iterator
-
 	int r, g, b	= 0;	// RGB result values
-	int x, y	= 0;	// result coordinate
 
 	pixel **result = NULL;
 
@@ -347,8 +344,11 @@ void bayer(pixel **image, int width, int height)
 	//	|											|
 	//	|											|
 	// (0, 0)---------------------------------(width, 0)
+	//
+	// .
+	// .
 	// R G R G R G
-	// G B G B G B
+	// G B G B G B . . . . 
 	for (i = width - 1; i >= 0; i--)
 	{
 		for (j = height - 1; j >= 0; j--)
@@ -397,7 +397,162 @@ void bayer(pixel **image, int width, int height)
 }
 
 
+void demosaic_neighbor(pixel **image, int width, int height)
+{
+	int i, j	= 0;	// Image iterator
+	int r, g, b	= 0;	// RGB result values
 
+	pixel **result = NULL;
+
+	result = (pixel **)malloc(sizeof(pixel *) * width);
+
+	for (i = 0; i < width; i++)
+	{
+		result[i] = (pixel *)malloc(sizeof(pixel) * height);
+	}
+
+
+	// (0, height)----------------------------(width, height)
+	//	|											|
+	//	|											|
+	//	|											|
+	// (0, 0)---------------------------------(width, 0)
+	//
+	// .
+	// .
+	// R G R G R G
+	// G B G B G B . . . . 
+	for (i = 0; i < width; i++)
+	{
+		// Deal with the last row later
+		for (j = 0; j < height - 1; j++)
+		{
+			if (	(i % 2 == 0)
+				&&	(j % 2 == 0))
+			{
+				if (i == 0)
+				{					
+					// G from the previous line, it's actually the
+					// last element(B) of this row
+					g = ((int)(image[width-1][j].b) + (int)(image[i][j].g))/2;
+					
+					if (j == 0)
+					{
+						// B in front of the very first pixel, let it be 0
+						b = 0;
+					}
+					else
+					{
+						// The B in front of the first pixel in this row
+						// is the G of the previous row
+						b = image[width-1][j-1].g;
+					}
+				}
+				else
+				{
+					g = (image[i-1][j+1].g + image[i][j].g)/2;	
+					b = image[i][j-1].b;
+				}
+
+				r = image[i][j+1].r;
+
+				result[i][j].r = (unsigned char)r;
+				result[i][j].g = (unsigned char)g;
+				result[i][j].b = (unsigned char)b;
+			}
+			else if (		(i % 2 == 1)
+						&&	(j % 2 == 0))
+			{
+				r = image[i-1][j+1].r;
+				g = ((int)(image[i-1][j].g) + (int)(image[i][j+1].g))/2;
+				b = image[i][j].b;
+			
+				result[i][j].r = (unsigned char)r;
+				result[i][j].g = (unsigned char)g;
+				result[i][j].b = (unsigned char)b;
+			}
+			else if (		(i % 2 == 0)
+						&&	(j % 2 == 1))
+			{
+				if (i == 0)
+				{
+					// G is the avg of the last element of previous row,
+					// which is a B, and the one about the current pixel
+					g = ((int)(image[width-1][j-1].b) + (int)(image[i][j+1].g))/2;
+				
+					// B is the one in front of the G about current pixel,
+					// i.e. the G at the end of this row
+					b = image[width-1][j].g;
+				}
+				else
+				{
+					g = ((int)(image[i-1][j].g) + (int)(image[i][j+1].g))/2;
+					b = image[i-1][j+1].b;
+				}
+
+				r = image[i][j].r;
+
+				result[i][j].r = (unsigned char)r;
+				result[i][j].g = (unsigned char)g;
+				result[i][j].b = (unsigned char)b;
+			}
+			else	//(i % 2 == 1) && (j % 2 == 1))
+			{
+				r = image[i-1][j].r;
+				g = ((int)(image[i][j].g) + (int)(image[i-1][j+1].g))/2;
+				b = image[i][j+1].b;
+				
+				result[i][j].r = (unsigned char)r;
+				result[i][j].g = (unsigned char)g;
+				result[i][j].b = (unsigned char)b;
+			}
+		}
+	}
+
+	// The last row
+	for (i = 0; i < width; i++)
+	{
+		if (i % 2 == 0)
+		{
+			if (i == 0)
+			{
+				b = image[width-1][height-1].g;
+				g = ((int)(image[width-1][height-2].b))/2;
+			}
+			else
+			{
+				b = 0;
+				g = ((int)image[i-1][height-1].g)/2;
+			}
+			r = image[i][height-1].r;
+		}
+		else
+		{
+			r = image[i-1][height-1].r;
+			g = ((int)image[i][j].g)/2;
+			b = 0;
+		}
+
+	}
+
+	for(i = 0; i < width; i++) 
+	{
+		for(j = 0; j < height; j++) 
+		{
+			image[i][j].r = result[i][j].r;
+			image[i][j].g = result[i][j].g;
+			image[i][j].b = result[i][j].b;
+		}
+	}
+	for(i = 0; i < width; i++) 
+	{
+		free(result[i]);
+	}
+	free(result);
+
+
+
+}
 
 
 
