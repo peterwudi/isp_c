@@ -270,16 +270,16 @@ void sharpen(pixel **image, int width, int height)
 	FILE	*sharpenROut, *sharpenGOut, *sharpenBOut = NULL;
 
 	if ((sharpenROut = fopen("output\\sharpenROut","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"yOut\"\n");
+		fprintf(stderr,"Unable to open target file \"sharpenROut\"\n");
 		exit(-1);
 	}
 	
 	if ((sharpenGOut = fopen("output\\sharpenGOut","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"cbOut\"\n");
+		fprintf(stderr,"Unable to open target file \"sharpenGOut\"\n");
 		exit(-1);
 	}
 	if ((sharpenBOut = fopen("output\\sharpenBOut","wb")) == NULL) {
-		fprintf(stderr,"Unable to open target file \"crOut\"\n");
+		fprintf(stderr,"Unable to open target file \"sharpenBOut\"\n");
 		exit(-1);
 	}
 
@@ -401,6 +401,7 @@ void demosaic_neighbor(pixel **image, int width, int height)
 {
 	int i, j	= 0;	// Image iterator
 	int r, g, b	= 0;	// RGB result values
+	FILE	*demosaicROut, *demosaicGOut, *demosaicBOut = NULL;
 
 	pixel **result = NULL;
 
@@ -451,7 +452,7 @@ void demosaic_neighbor(pixel **image, int width, int height)
 				else
 				{
 					g = (image[i-1][j+1].g + image[i][j].g)/2;	
-					b = image[i][j-1].b;
+					b = image[i][j+1].b;
 				}
 
 				r = image[i][j+1].r;
@@ -550,8 +551,25 @@ void demosaic_neighbor(pixel **image, int width, int height)
 	}
 	free(result);
 
+	if ((demosaicROut = fopen("output\\demosaicROut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"demosaicROut\"\n");
+		exit(-1);
+	}
+	
+	if ((demosaicGOut = fopen("output\\demosaicGOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"demosaicGOut\"\n");
+		exit(-1);
+	}
+	if ((demosaicBOut = fopen("output\\demosaicBOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"demosaicBOut\"\n");
+		exit(-1);
+	}
 
+	dump_pixel(image, width, height, demosaicROut, demosaicGOut, demosaicBOut, 1);
 
+	fclose(demosaicROut);
+	fclose(demosaicGOut);
+	fclose(demosaicBOut);
 }
 
 
