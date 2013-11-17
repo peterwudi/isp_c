@@ -452,7 +452,7 @@ void demosaic_neighbor(pixel **image, int width, int height)
 				else
 				{
 					g = (image[i-1][j+1].g + image[i][j].g)/2;	
-					b = image[i][j+1].b;
+					b = image[i-1][j].b;
 				}
 
 				r = image[i][j+1].r;
@@ -533,6 +533,10 @@ void demosaic_neighbor(pixel **image, int width, int height)
 			g = ((int)image[i][j].g)/2;
 			b = 0;
 		}
+
+		result[i][j].r = (unsigned char)r;
+		result[i][j].g = (unsigned char)g;
+		result[i][j].b = (unsigned char)b;
 
 	}
 
