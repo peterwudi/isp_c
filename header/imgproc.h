@@ -3,6 +3,8 @@ void dump_pixel(pixel **image, int width, int height, FILE *a_out, FILE *b_out, 
 
 void rgb2ycc (pixel **image, int width, int height);
 
+void ycc2rgb (pixel **image, int width, int height);
+
 void conv_2d(int **kernel, int kernelSize, pixel **image, int width, int height, double factor, int bias);
 
 // take the left pixel

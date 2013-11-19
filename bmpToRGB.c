@@ -204,8 +204,9 @@ void bmpToRGB(char *inFilename, int proc)
 	//takeleft(image, infoheader.width, infoheader.height);
 	//bayer(image, infoheader.width, infoheader.height);
 	demosaic_neighbor(image, infoheader.width, infoheader.height);
-	sharpen(image, infoheader.width, infoheader.height);
+	//sharpen(image, infoheader.width, infoheader.height);
 	rgb2ycc(image, infoheader.width, infoheader.height);
+	ycc2rgb(image, infoheader.width, infoheader.height);
 
 	buf = (char *)malloc(sizeof(char) * header.offset);
 	

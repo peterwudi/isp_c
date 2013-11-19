@@ -103,7 +103,69 @@ void rgb2ycc (pixel **image, int width, int height)
 	fclose(crOut);
 }
 
+void ycc2rgb (pixel **image, int width, int height)
+{
+	int			i,j			= 0;
+	long long	r,g,b		= 0;
+	int			mask		= 0x00FF;
+	FILE		*rOut, *gOut, *bOut = NULL;
 
+	if ((rOut = fopen("output\\rOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"rOut\"\n");
+		exit(-1);
+	}
+	
+	if ((gOut = fopen("output\\gOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"gOut\"\n");
+		exit(-1);
+	}
+	if ((bOut = fopen("output\\bOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"bOut\"\n");
+		exit(-1);
+	}
+
+	/*
+	R     1   0	       1.402        Y
+
+	G  =  1  -0.3441  -0.7141   X   Cb
+
+	B     1   1.772    0.00015      Cr
+	
+	16 bits after the decimal point
+
+	18'sd65536,  18'sd0,       18'sd91881,
+	18'sd65536, -18'sd22551,  -18'sd46799,
+	18'sd65536,  18'sd112853,  18'sd10
+	*/
+	
+	for (j = 0; j < height; j++)
+	{
+		for (i = 0; i < width; i++)
+		{
+ 			r	= ((int)image[i][j].y)*65536  + ((int)image[i][j].y)*0       + ((int)image[i][j].y)*91881;
+			g	= ((int)image[i][j].cb)*65536 - ((int)image[i][j].cb)*22551  - ((int)image[i][j].cb)*46799;
+			b	= ((int)image[i][j].cr)*65536 + ((int)image[i][j].cr)*112853 + ((int)image[i][j].cr)*10;
+
+			r = (r >> 25) & mask;
+			g = (g >> 25) & mask;
+			b = (b >> 25) & mask;
+
+			//r	= (r << 4) >> 29;
+			//g	= (g << 4) >> 29;
+			//b	= (b << 4) >> 29;
+
+			image[i][j].r	= (unsigned char)r;
+			image[i][j].g	= (unsigned char)g;
+			image[i][j].b	= (unsigned char)b;
+		}
+	}
+
+	dump_pixel(image, width, height, rOut, gOut, bOut, 1);
+
+	fclose(rOut);
+	fclose(gOut);
+	fclose(bOut);
+}
 
 void conv_2d(int **kernel, int kernelSize, pixel **image, int width, int height, double factor, int bias)
 {
