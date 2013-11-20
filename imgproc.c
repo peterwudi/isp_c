@@ -142,17 +142,13 @@ void ycc2rgb (pixel **image, int width, int height)
 	{
 		for (i = 0; i < width; i++)
 		{
- 			r	= ((int)image[i][j].y)*65536  + ((int)image[i][j].y)*0       + ((int)image[i][j].y)*91881;
-			g	= ((int)image[i][j].cb)*65536 - ((int)image[i][j].cb)*22551  - ((int)image[i][j].cb)*46799;
-			b	= ((int)image[i][j].cr)*65536 + ((int)image[i][j].cr)*112853 + ((int)image[i][j].cr)*10;
+			r	= ((long long)image[i][j].y)*(long long)65536  + ((long long)image[i][j].cb)*(long long)0       + ((long long)image[i][j].cr)*(long long)91881;
+			g	= ((long long)image[i][j].y)*(long long)65536 - ((long long)image[i][j].cb)*(long long)22551  - ((long long)image[i][j].cr)*(long long)46799;
+			b	= ((long long)image[i][j].y)*(long long)65536 + ((long long)image[i][j].cb)*(long long)112853 + ((long long)image[i][j].cr)*(long long)10;
 
 			r = (r >> 25) & mask;
 			g = (g >> 25) & mask;
 			b = (b >> 25) & mask;
-
-			//r	= (r << 4) >> 29;
-			//g	= (g << 4) >> 29;
-			//b	= (b << 4) >> 29;
 
 			image[i][j].r	= (unsigned char)r;
 			image[i][j].g	= (unsigned char)g;
