@@ -125,17 +125,17 @@ void ycclut (pixel **image, int width, int height)
 		{
  			y_orig		= ((double)image[i][j].y)/512;
 			y_double	= pow(y_orig, (double)0.4);
-			y_longlong	= (long long)(y_double*((double)512));
-			y_longlong	= y_longlong & 0x1FFFF;
+			y_longlong	= (long long)(y_double*((double)32));
+			y_longlong	= y_longlong & 0x1FFF;
 
-			diff = ((double)y_double-((double)y_longlong/(double)512));
+			diff = ((double)y_double-((double)y_longlong/(double)32));
 
 			if (diff > max_diff)
 			{
 				max_diff = diff;				
 			}
 
-			diff_percent = (diff/y_double)*100;
+			diff_percent = (diff/y_double);
 			if (diff_percent > max_diff_percent)
 			{
 				max_diff_percent = diff_percent;
@@ -147,7 +147,9 @@ void ycclut (pixel **image, int width, int height)
 	rms /= (height*width);
 	rms = pow(rms, 0.5);
 
-	printf("\nrms is %f\nmax diff = %f, max diff percentage = %f\%\n\n", rms, max_diff, max_diff_percent);
+
+	printf("\nrms is %f\nmax diff = %f, max diff percentage = %f\%\n\n",
+			rms, max_diff, max_diff_percent);
 
 	max_diff	= 0;
 	min_diff	= 0;
