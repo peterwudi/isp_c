@@ -1,6 +1,6 @@
 #include "stdio.h"
 #include "stdlib.h"
-#include "math.h"
+#include <math.h>
 #include "string.h"
 
 #include "header\rgb_basic.h"
@@ -101,6 +101,72 @@ void rgb2ycc (pixel **image, int width, int height)
 	fclose(yOut);
 	fclose(cbOut);
 	fclose(crOut);
+}
+
+void ycclut (pixel **image, int width, int height)
+{
+	int			i,j			= 0;
+	double		y_orig		= 0;
+	double		y_double	= 0;
+	long long	y_longlong	= 0;
+	double		rms			= 0;
+	double		diff		= 0;
+	double		max_diff	= 0;
+	double		min_diff	= 0;
+
+	double		diff_percent = 0;
+	double		max_diff_percent = 0;
+
+	double		y_range	= 0;
+
+	for (j = 0; j < height; j++)
+	{
+		for (i = 0; i < width; i++)
+		{
+ 			y_orig		= ((double)image[i][j].y)/512;
+			y_double	= pow(y_orig, (double)0.4);
+			y_longlong	= (long long)(y_double*((double)512));
+			y_longlong	= y_longlong & 0x1FFFF;
+
+			diff = ((double)y_double-((double)y_longlong/(double)512));
+
+			if (diff > max_diff)
+			{
+				max_diff = diff;				
+			}
+
+			diff_percent = (diff/y_double)*100;
+			if (diff_percent > max_diff_percent)
+			{
+				max_diff_percent = diff_percent;
+			}
+
+			rms += diff*diff;
+		}
+	}
+	rms /= (height*width);
+	rms = pow(rms, 0.5);
+
+	printf("\nrms is %f\nmax diff = %f, max diff percentage = %f\%\n\n", rms, max_diff, max_diff_percent);
+
+	max_diff	= 0;
+	min_diff	= 0;
+	for (y_range = 0; y_range <= 255; y_range += 0.0625)
+	{
+		diff = y_range - pow(y_range, 0.4);
+		
+		if (diff > max_diff)
+		{
+			max_diff = diff;				
+		}
+		if (diff < min_diff)
+		{
+			min_diff = diff;				
+		}
+	}
+
+	printf("On gamma curve, max_diff = %f, min_diff = %f\n", max_diff, min_diff);
+
 }
 
 void ycc2rgb (pixel **image, int width, int height)
