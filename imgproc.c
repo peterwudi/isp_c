@@ -703,4 +703,188 @@ void demosaic_neighbor(pixel **image, int width, int height)
 }
 
 
+void demosaic_acpi(pixel **image, int width, int height)
+{
+	int i, j	= 0;	// Image iterator
+	int r, g, b	= 0;	// RGB result values
+	int	h, v	= 0;	// Gradient
+	int	gh, gv, ghv	= 0;
+	FILE	*demosaicROut, *demosaicGOut, *demosaicBOut = NULL;
+
+	pixel **result = NULL;
+
+	result = (pixel **)malloc(sizeof(pixel *) * width);
+
+	for (i = 0; i < width; i++)
+	{
+		result[i] = (pixel *)malloc(sizeof(pixel) * height);
+	}
+
+
+	// (0, height)----------------------------(width, height)
+	//	|											|
+	//	|											|
+	//	|											|
+	// (0, 0)---------------------------------(width, 0)
+	//
+	// .
+	// .
+	// R G R G R G
+	// G B G B G B . . . . 
+
+	// Green interpolation
+	for (i = 0; i < width; i++)
+	{
+		// Deal with the last row later
+		for (j = 0; j < height; j++)
+		{
+			// Calculate gradients
+			if (i == 0)
+			{
+				// First column
+				h = (int)image[i+1][j].g;
+			}
+			else if (i == width-1)
+			{
+				// Last column
+				h = (int)image[i-1][j].g;
+			}
+			else
+			{
+				h = abs((int)image[i+1][j].g - (int)image[i-1][j].g);
+			}
+
+			if (j == 0)
+			{
+				// First row
+				v = (int)image[i][j+1].g;			
+			}
+			else if (j == height-1)
+			{
+				// Last row
+				v = (int)image[i][j-1].g;
+			}
+			else
+			{
+				v = abs((int)image[i][j+1].g - (int)image[i][j-1].g);
+			}
+
+			// Calculate gh, gv and gvh
+			if (j == 0)
+			{
+				// First row
+				gv = (int)image[i][j+1].g;			
+			}
+			else if (j == height-1)
+			{
+				// Last row
+				gv = (int)image[i][j-1].g;
+			}
+			else
+			{
+				gv = ((int)image[i][j+1].g + (int)image[i][j-1].g)/2;
+			}
+
+			if (i == 0)
+			{
+				// First column
+				gh = (int)image[i+1][j].g;
+			}
+			else if (i == width-1)
+			{
+				// Last column
+				gh = (int)image[i-1][j].g;
+			}
+			else
+			{
+				gh = ((int)image[i+1][j].g + (int)image[i-1][j].g)/2;
+			}
+
+			ghv = (gh + gv)/2;
+
+			// Select interpolated g
+			if (h > v)
+			{
+				g = gv;
+			}
+			else if (h < v)
+			{
+				g = gh;
+			}
+			else
+			{
+				g = ghv;
+			}
+
+			if (	((i % 2 == 0) &&	(j % 2 == 0))
+				||	((i % 2 == 1) &&	(j % 2 == 1)))
+			{
+				// G at the center, no need to interpolate
+				result[i][j].r = (unsigned char)0;
+				result[i][j].g = (image[i][j].g);
+				result[i][j].b = (unsigned char)0;
+			}
+			else if (		(i % 2 == 1)
+						&&	(j % 2 == 0))
+			{
+				//	R	G	R
+				//	G	B	G
+				//	R	G	R
+				result[i][j].r = (unsigned char)0;
+				result[i][j].g = (unsigned char)g;
+				result[i][j].b = image[i][j].b;
+			}
+			else if (		(i % 2 == 0)
+						&&	(j % 2 == 1))
+			{
+				//	B	G	B
+				//	G	R	G
+				//	B	G	B
+				result[i][j].r = image[i][j].r;
+				result[i][j].g = (unsigned char)g;
+				result[i][j].b = (unsigned char)0;
+			}
+		}
+	}
+
+	for(i = 0; i < width; i++) 
+	{
+		for(j = 0; j < height; j++) 
+		{
+			image[i][j].r = result[i][j].r;
+			image[i][j].g = result[i][j].g;
+			image[i][j].b = result[i][j].b;
+		}
+	}
+	for(i = 0; i < width; i++) 
+	{
+		free(result[i]);
+	}
+	free(result);
+
+	if ((demosaicROut = fopen("output\\demosaicROut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"demosaicROut\"\n");
+		exit(-1);
+	}
+	
+	if ((demosaicGOut = fopen("output\\demosaicGOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"demosaicGOut\"\n");
+		exit(-1);
+	}
+	if ((demosaicBOut = fopen("output\\demosaicBOut","wb")) == NULL) {
+		fprintf(stderr,"Unable to open target file \"demosaicBOut\"\n");
+		exit(-1);
+	}
+
+	dump_pixel(image, width, height, demosaicROut, demosaicGOut, demosaicBOut, 1);
+
+	fclose(demosaicROut);
+	fclose(demosaicGOut);
+	fclose(demosaicBOut);
+}
+
+
+
+
+
 
