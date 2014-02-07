@@ -709,6 +709,10 @@ void demosaic_acpi(pixel **image, int width, int height)
 	int r, g, b	= 0;	// RGB result values
 	int	h, v	= 0;	// Gradient
 	int	gh, gv, ghv	= 0;
+	int	f, T	= 0;
+	pixel	rf[9] = {0};
+	int	g28, g46, g19, g37 = 0;
+	int n, p	= 0;
 	FILE	*demosaicROut, *demosaicGOut, *demosaicBOut = NULL;
 
 	pixel **result = NULL;
@@ -720,7 +724,7 @@ void demosaic_acpi(pixel **image, int width, int height)
 		result[i] = (pixel *)malloc(sizeof(pixel) * height);
 	}
 
-
+	f = 0;
 	// (0, height)----------------------------(width, height)
 	//	|											|
 	//	|											|
@@ -735,7 +739,6 @@ void demosaic_acpi(pixel **image, int width, int height)
 	// Green interpolation
 	for (i = 0; i < width; i++)
 	{
-		// Deal with the last row later
 		for (j = 0; j < height; j++)
 		{
 			// Calculate gradients
@@ -824,15 +827,261 @@ void demosaic_acpi(pixel **image, int width, int height)
 				result[i][j].g = (image[i][j].g);
 				result[i][j].b = (unsigned char)0;
 			}
-			else if (		(i % 2 == 1)
+			else 
+			{
+				f = f + h + v;
+				if (		(i % 2 == 1)
 						&&	(j % 2 == 0))
+				{
+					//	R	G	R
+					//	G	B	G
+					//	R	G	R
+					result[i][j].r = (unsigned char)0;
+					result[i][j].g = (unsigned char)g;
+					result[i][j].b = image[i][j].b;
+				}
+				else if (		(i % 2 == 0)
+							&&	(j % 2 == 1))
+				{
+					//	B	G	B
+					//	G	R	G
+					//	B	G	B
+					result[i][j].r = image[i][j].r;
+					result[i][j].g = (unsigned char)g;
+					result[i][j].b = (unsigned char)0;
+				}
+			}
+		}
+	}
+
+	// Determine threashold
+	//if (f < 73242)
+	//{
+	//	T = 50;
+	//}
+	//else if (f < 102539)
+	//{
+	//	T = 40;
+	//}
+	//else if (f < 146484)
+	//{
+	//	T = 20;
+	//}
+	//else if (f < 292965)
+	//{
+	//	T = 15;
+	//}
+	//else
+	//{
+	//	T = 8;
+	//}
+
+	T = 80;
+
+	// RG interpolation
+	for (i = 0; i < width; i++)
+	{
+		for (j = 0; j < height; j++)
+		{
+			// Insert 0's at the boundary
+			if (i == 0)
+			{
+				// First column
+				if (j == 0)
+				{
+					// First row
+					memcpy(&rf[0], &result[i+1][j+1], sizeof(pixel));
+					memcpy(&rf[1], &result[i][j+1], sizeof(pixel));
+					memset(&rf[2], 0, sizeof(pixel));
+					memcpy(&rf[3], &result[i+1][j], sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memset(&rf[5], 0, sizeof(pixel));
+					memset(&rf[6], 0, sizeof(pixel));
+					memset(&rf[7], 0, sizeof(pixel));
+					memset(&rf[8], 0, sizeof(pixel));
+				}
+				else if (j == height - 1)
+				{
+					// Last row
+					memset(&rf[0], 0, sizeof(pixel));
+					memset(&rf[1], 0, sizeof(pixel));
+					memset(&rf[2], 0, sizeof(pixel));
+					memcpy(&rf[3], &result[i+1][j], sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memset(&rf[5], 0, sizeof(pixel));
+					memcpy(&rf[6], &result[i+1][j-1], sizeof(pixel));
+					memcpy(&rf[7], &result[i][j-1], sizeof(pixel));
+					memset(&rf[8], 0, sizeof(pixel));
+				}
+				else
+				{
+					memcpy(&rf[0], &result[i+1][j+1], sizeof(pixel));
+					memcpy(&rf[1], &result[i][j+1], sizeof(pixel));
+					memset(&rf[2], 0, sizeof(pixel));
+					memcpy(&rf[3], &result[i+1][j], sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memset(&rf[5], 0, sizeof(pixel));
+					memcpy(&rf[6], &result[i+1][j-1], sizeof(pixel));
+					memcpy(&rf[7], &result[i][j-1], sizeof(pixel));
+					memset(&rf[8], 0, sizeof(pixel));
+				}
+			}
+			else if (i == width-1)
+			{
+				// Last column
+				if (j == 0)
+				{
+					// First row
+					memset(&rf[0], 0, sizeof(pixel));
+					memcpy(&rf[1], &result[i][j+1], sizeof(pixel));
+					memcpy(&rf[2], &result[i-1][j+1], sizeof(pixel));
+					memset(&rf[3], 0, sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memcpy(&rf[5], &result[i-1][j], sizeof(pixel));
+					memset(&rf[6], 0, sizeof(pixel));
+					memset(&rf[7], 0, sizeof(pixel));
+					memset(&rf[8], 0, sizeof(pixel));
+				}
+				else if (j == height - 1)
+				{
+					// Last row
+					memset(&rf[0], 0, sizeof(pixel));
+					memset(&rf[1], 0, sizeof(pixel));
+					memset(&rf[2], 0, sizeof(pixel));
+					memset(&rf[3], 0, sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memcpy(&rf[5], &result[i-1][j], sizeof(pixel));
+					memset(&rf[6], 0, sizeof(pixel));
+					memcpy(&rf[7], &result[i][j-1], sizeof(pixel));
+					memcpy(&rf[8], &result[i-1][j-1], sizeof(pixel));
+				}
+				else
+				{
+					memset(&rf[0], 0, sizeof(pixel));
+					memcpy(&rf[1], &result[i][j+1], sizeof(pixel));
+					memcpy(&rf[2], &result[i-1][j+1], sizeof(pixel));
+					memset(&rf[3], 0, sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memcpy(&rf[5], &result[i-1][j], sizeof(pixel));
+					memset(&rf[6], 0, sizeof(pixel));
+					memcpy(&rf[7], &result[i][j-1], sizeof(pixel));
+					memcpy(&rf[8], &result[i-1][j-1], sizeof(pixel));
+				}
+			}
+			else
+			{
+				if (j == 0)
+				{
+					// First row
+					memcpy(&rf[0], &result[i+1][j+1], sizeof(pixel));
+					memcpy(&rf[1], &result[i][j+1], sizeof(pixel));
+					memcpy(&rf[2], &result[i-1][j+1], sizeof(pixel));
+					memcpy(&rf[3], &result[i+1][j], sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memcpy(&rf[5], &result[i-1][j], sizeof(pixel));
+					memset(&rf[6], 0, sizeof(pixel));
+					memset(&rf[7], 0, sizeof(pixel));
+					memset(&rf[8], 0, sizeof(pixel));
+				}
+				else if (j == height - 1)
+				{
+					// Last row
+					memset(&rf[0], 0, sizeof(pixel));
+					memset(&rf[1], 0, sizeof(pixel));
+					memset(&rf[2], 0, sizeof(pixel));
+					memcpy(&rf[3], &result[i+1][j], sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memcpy(&rf[5], &result[i-1][j], sizeof(pixel));
+					memcpy(&rf[6], &result[i+1][j-1], sizeof(pixel));
+					memcpy(&rf[7], &result[i][j-1], sizeof(pixel));
+					memcpy(&rf[8], &result[i-1][j-1], sizeof(pixel));
+				}
+				else
+				{
+					memcpy(&rf[0], &result[i+1][j+1], sizeof(pixel));
+					memcpy(&rf[1], &result[i][j+1], sizeof(pixel));
+					memcpy(&rf[2], &result[i-1][j+1], sizeof(pixel));
+					memcpy(&rf[3], &result[i+1][j], sizeof(pixel));
+					memcpy(&rf[4], &result[i][j], sizeof(pixel));
+					memcpy(&rf[5], &result[i-1][j], sizeof(pixel));
+					memcpy(&rf[6], &result[i+1][j-1], sizeof(pixel));
+					memcpy(&rf[7], &result[i][j-1], sizeof(pixel));
+					memcpy(&rf[8], &result[i-1][j-1], sizeof(pixel));
+				}
+			}
+
+			// Gradiants
+			g46 = abs((int)rf[3].g - (int)rf[5].g);
+			g28 = abs((int)rf[1].g - (int)rf[7].g);
+			g19 = abs((int)rf[0].g - (int)rf[8].g);
+			g37 = abs((int)rf[2].g - (int)rf[6].g);
+
+			if ((i % 2 == 0) &&	(j % 2 == 0))
+			{
+				//	G	R	G
+				//	B	G	B
+				//	G	R	G
+				if ((g46 > T) || (g28 > T) || (g19 > T) || (g37 > T))
+				{
+					// Edge pixel
+					result[i][j].r =
+						(unsigned char)(((int)rf[1].r+(int)rf[7].r)/2 + (2*(int)rf[4].g-(int)rf[1].g-(int)rf[7].g)/2);
+					result[i][j].b =
+						(unsigned char)(((int)rf[3].b+(int)rf[5].b)/2 + (2*(int)rf[4].g-(int)rf[3].g-(int)rf[5].g)/2);
+				}
+				else
+				{
+					// Smooth
+					result[i][j].r = (unsigned char)(((int)rf[1].r+(int)rf[7].r)/2);
+					result[i][j].b = (unsigned char)(((int)rf[3].b+(int)rf[5].b)/2);
+				}
+
+				// G is unchanged
+			}
+			else if ((i % 2 == 1) && (j % 2 == 0))
 			{
 				//	R	G	R
 				//	G	B	G
 				//	R	G	R
-				result[i][j].r = (unsigned char)0;
-				result[i][j].g = (unsigned char)g;
-				result[i][j].b = image[i][j].b;
+				if ((g46 > T) || (g28 > T) || (g19 > T) || (g37 > T))
+				{
+					// Edge pixel
+					n = abs((int)rf[0].r - (int)rf[8].r) + abs(2*(int)rf[4].g - (int)rf[0].g - (int)rf[8].g);
+					p = abs((int)rf[2].r - (int)rf[6].r) + abs(2*(int)rf[4].g - (int)rf[2].g - (int)rf[6].g);
+
+					if (n < p)
+					{		
+						result[i][j].r =
+							(unsigned char)(((int)rf[0].r+(int)rf[8].r)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2);
+					}
+					else if (n > p)
+					{
+						result[i][j].r =
+							(unsigned char)(((int)rf[2].r+(int)rf[6].r)/2 + (2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)/2);
+					}
+					else
+					{
+						result[i][j].r =
+							(unsigned char)(
+								(((int)rf[0].r+(int)rf[8].r)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2) + 
+								(((int)rf[2].r+(int)rf[6].r)/2 + (2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)/2)
+							)/2;
+					}
+					
+				}
+				else
+				{
+					// Smooth
+					if (g19 > g37)
+					{
+						result[i][j].r = (unsigned char)(((int)rf[2].r+(int)rf[6].r)/2);
+					}
+					else
+					{
+						result[i][j].r = (unsigned char)(((int)rf[0].r+(int)rf[8].r)/2);
+					}
+				}
+				// G and B are unchanged
 			}
 			else if (		(i % 2 == 0)
 						&&	(j % 2 == 1))
@@ -840,9 +1089,66 @@ void demosaic_acpi(pixel **image, int width, int height)
 				//	B	G	B
 				//	G	R	G
 				//	B	G	B
-				result[i][j].r = image[i][j].r;
-				result[i][j].g = (unsigned char)g;
-				result[i][j].b = (unsigned char)0;
+				if ((g46 > T) || (g28 > T) || (g19 > T) || (g37 > T))
+				{
+					// Edge pixel
+					n = abs((int)rf[0].b - (int)rf[8].r) + abs(2*(int)rf[4].g - (int)rf[0].g - (int)rf[8].g);
+					p = abs((int)rf[2].b - (int)rf[6].r) + abs(2*(int)rf[4].g - (int)rf[2].g - (int)rf[6].g);
+
+					if (n < p)
+					{		
+						result[i][j].b =
+							(unsigned char)(((int)rf[0].b+(int)rf[8].b)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2);
+					}
+					else if (n > p)
+					{
+						result[i][j].b =
+							(unsigned char)(((int)rf[2].b+(int)rf[6].b)/2 + (2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)/2);
+					}
+					else
+					{
+						result[i][j].b =
+							(unsigned char)(
+								(((int)rf[0].b+(int)rf[8].b)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2) + 
+								(((int)rf[2].b+(int)rf[6].b)/2 + (2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)/2)
+							)/2;
+					}
+				}
+				else
+				{
+					// Smooth
+					if (g19 > g37)
+					{
+						result[i][j].b = (unsigned char)(((int)rf[2].b+(int)rf[6].b)/2);
+					}
+					else
+					{
+						result[i][j].b = (unsigned char)(((int)rf[0].b+(int)rf[8].b)/2);
+					}
+				}
+				
+				// R and G are unchanged
+			}
+			else //((i % 2 == 1) &&	(j % 2 == 1))
+			{
+				//	G	B	G
+				//	R	G	R
+				//	G	B	G
+				if ((g46 > T) || (g28 > T) || (g19 > T) || (g37 > T))
+				{
+					// Edge pixel
+					result[i][j].r =
+						(unsigned char)(((int)rf[3].r+(int)rf[5].r)/2 + (2*(int)rf[4].g-(int)rf[3].g-(int)rf[5].g)/2);
+					result[i][j].b =
+						(unsigned char)(((int)rf[1].b+(int)rf[7].b)/2 + (2*(int)rf[4].g-(int)rf[1].g-(int)rf[7].g)/2);
+				}
+				else
+				{
+					// Smooth
+					result[i][j].r = (unsigned char)(((int)rf[3].r+(int)rf[5].r)/2);
+					result[i][j].b = (unsigned char)(((int)rf[1].b+(int)rf[7].b)/2);
+				}
+				// G is unchanged
 			}
 		}
 	}
