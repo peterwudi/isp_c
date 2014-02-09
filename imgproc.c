@@ -855,28 +855,26 @@ void demosaic_acpi(pixel **image, int width, int height)
 	}
 
 	// Determine threashold
-	//if (f < 73242)
-	//{
-	//	T = 50;
-	//}
-	//else if (f < 102539)
-	//{
-	//	T = 40;
-	//}
-	//else if (f < 146484)
-	//{
-	//	T = 20;
-	//}
-	//else if (f < 292965)
-	//{
-	//	T = 15;
-	//}
-	//else
-	//{
-	//	T = 8;
-	//}
-
-	T = 80;
+	if (f < 73242)
+	{
+		T = 50;
+	}
+	else if (f < 102539)
+	{
+		T = 40;
+	}
+	else if (f < 146484)
+	{
+		T = 20;
+	}
+	else if (f < 292965)
+	{
+		T = 15;
+	}
+	else
+	{
+		T = 8;
+	}
 
 	// RG interpolation
 	for (i = 0; i < width; i++)
