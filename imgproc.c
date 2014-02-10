@@ -877,9 +877,9 @@ void demosaic_acpi(pixel **image, int width, int height)
 	}
 
 	// RG interpolation
-	for (i = 0; i < width; i++)
+	for (j = 0; j < height; j++)
 	{
-		for (j = 0; j < height; j++)
+		for (i = 0; i < width; i++)
 		{
 			// Insert 0's at the boundary
 			if (i == 0)
@@ -1050,7 +1050,7 @@ void demosaic_acpi(pixel **image, int width, int height)
 					if (n < p)
 					{		
 						result[i][j].r =
-							(unsigned char)(((int)rf[0].r+(int)rf[8].r)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2);
+							(unsigned char)(((int)rf[0].r+(int)rf[8].r)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)/2);
 					}
 					else if (n > p)
 					{
@@ -1060,10 +1060,10 @@ void demosaic_acpi(pixel **image, int width, int height)
 					else
 					{
 						result[i][j].r =
-							(unsigned char)(
-								(((int)rf[0].r+(int)rf[8].r)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2) + 
+							(unsigned char)((int)(
+								(((int)rf[0].r+(int)rf[8].r)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)/2) + 
 								(((int)rf[2].r+(int)rf[6].r)/2 + (2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)/2)
-							)/2;
+							)/2);
 					}
 					
 				}
@@ -1096,7 +1096,7 @@ void demosaic_acpi(pixel **image, int width, int height)
 					if (n < p)
 					{		
 						result[i][j].b =
-							(unsigned char)(((int)rf[0].b+(int)rf[8].b)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2);
+							(unsigned char)(((int)rf[0].b+(int)rf[8].b)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)/2);
 					}
 					else if (n > p)
 					{
@@ -1106,10 +1106,10 @@ void demosaic_acpi(pixel **image, int width, int height)
 					else
 					{
 						result[i][j].b =
-							(unsigned char)(
-								(((int)rf[0].b+(int)rf[8].b)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[9].g)/2) + 
+							(unsigned char)((int)(
+								(((int)rf[0].b+(int)rf[8].b)/2 + (2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)/2) + 
 								(((int)rf[2].b+(int)rf[6].b)/2 + (2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)/2)
-							)/2;
+							)/2);
 					}
 				}
 				else
