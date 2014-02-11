@@ -713,6 +713,7 @@ void demosaic_acpi(pixel **image, int width, int height)
 	pixel	rf[9] = {0};
 	int	g28, g46, g19, g37 = 0;
 	int n, p	= 0;
+	int	tmp1, tmp2 	= 0;
 	FILE	*demosaicROut, *demosaicGOut, *demosaicBOut = NULL;
 
 	pixel **result = NULL;
@@ -1013,11 +1014,6 @@ void demosaic_acpi(pixel **image, int width, int height)
 			g28 = abs((int)rf[1].g - (int)rf[7].g);
 			g19 = abs((int)rf[0].g - (int)rf[8].g);
 			g37 = abs((int)rf[2].g - (int)rf[6].g);
-			
-			if (i == 0 && j == 1)
-			{
-				i = 0;
-			}
 
 			if ((i % 2 == 0) &&	(j % 2 == 0))
 			{
@@ -1052,25 +1048,22 @@ void demosaic_acpi(pixel **image, int width, int height)
 					n = abs((int)rf[0].r - (int)rf[8].r) + abs(2*(int)rf[4].g - (int)rf[0].g - (int)rf[8].g);
 					p = abs((int)rf[2].r - (int)rf[6].r) + abs(2*(int)rf[4].g - (int)rf[2].g - (int)rf[6].g);
 
+					tmp1 = (((int)rf[0].r+(int)rf[8].r)/2 + ((2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)>>1));
+					tmp2 = (((int)rf[2].r+(int)rf[6].r)/2 + ((2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)>>1));
+					
 					if (n < p)
 					{		
-						result[i][j].r =
-							(unsigned char)(((int)rf[0].r+(int)rf[8].r)/2 + ((2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)>>1));
+						result[i][j].r = (unsigned char)tmp1;
 					}
 					else if (n > p)
 					{
-						result[i][j].r =
-							(unsigned char)(((int)rf[2].r+(int)rf[6].r)/2 + ((2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)>>1));
+						result[i][j].r = (unsigned char)tmp2;
 					}
 					else
 					{
-						result[i][j].r =
-							(unsigned char)((int)(
-								(((int)rf[0].r+(int)rf[8].r)/2 + ((2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)>>1)) + 
-								(((int)rf[2].r+(int)rf[6].r)/2 + ((2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)>>1))
-							)/2);
+						result[i][j].r = ((unsigned char)tmp1 + (unsigned char)tmp2)/2;
 					}
-					
+
 				}
 				else
 				{
@@ -1098,23 +1091,20 @@ void demosaic_acpi(pixel **image, int width, int height)
 					n = abs((int)rf[0].b - (int)rf[8].b) + abs(2*(int)rf[4].g - (int)rf[0].g - (int)rf[8].g);
 					p = abs((int)rf[2].b - (int)rf[6].b) + abs(2*(int)rf[4].g - (int)rf[2].g - (int)rf[6].g);
 
+					tmp1 = (((int)rf[0].b+(int)rf[8].b)/2 + ((2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)>>1));
+					tmp2 = (((int)rf[2].b+(int)rf[6].b)/2 + ((2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)>>1));
+					
 					if (n < p)
 					{		
-						result[i][j].b =
-							(unsigned char)(((int)rf[0].b+(int)rf[8].b)/2 + ((2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)>>1));
+						result[i][j].b = (unsigned char)tmp1;
 					}
 					else if (n > p)
 					{
-						result[i][j].b =
-							(unsigned char)(((int)rf[2].b+(int)rf[6].b)/2 + ((2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)>>1));
+						result[i][j].b = (unsigned char)tmp2;
 					}
 					else
 					{
-						result[i][j].b =
-							(unsigned char)((int)(
-								(((int)rf[0].b+(int)rf[8].b)/2 + ((2*(int)rf[4].g-(int)rf[0].g-(int)rf[8].g)>>1)) + 
-								(((int)rf[2].b+(int)rf[6].b)/2 + ((2*(int)rf[4].g-(int)rf[2].g-(int)rf[6].g)>>1))
-							)/2);
+						result[i][j].b = ((unsigned char)tmp1 + (unsigned char)tmp2)/2;
 					}
 				}
 				else
