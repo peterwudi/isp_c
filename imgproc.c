@@ -737,9 +737,9 @@ void demosaic_acpi(pixel **image, int width, int height)
 	// G B G B G B . . . . 
 
 	// Green interpolation
-	for (i = 0; i < width; i++)
+	for (j = 0; j < height; j++)
 	{
-		for (j = 0; j < height; j++)
+		for (i = 0; i < width; i++)
 		{
 			// Calculate gradients
 			if (i == 0)
@@ -1013,6 +1013,11 @@ void demosaic_acpi(pixel **image, int width, int height)
 			g28 = abs((int)rf[1].g - (int)rf[7].g);
 			g19 = abs((int)rf[0].g - (int)rf[8].g);
 			g37 = abs((int)rf[2].g - (int)rf[6].g);
+			
+			if (i == 0 && j == 1)
+			{
+				i = 0;
+			}
 
 			if ((i % 2 == 0) &&	(j % 2 == 0))
 			{
@@ -1090,8 +1095,8 @@ void demosaic_acpi(pixel **image, int width, int height)
 				if ((g46 > T) || (g28 > T) || (g19 > T) || (g37 > T))
 				{
 					// Edge pixel
-					n = abs((int)rf[0].b - (int)rf[8].r) + abs(2*(int)rf[4].g - (int)rf[0].g - (int)rf[8].g);
-					p = abs((int)rf[2].b - (int)rf[6].r) + abs(2*(int)rf[4].g - (int)rf[2].g - (int)rf[6].g);
+					n = abs((int)rf[0].b - (int)rf[8].b) + abs(2*(int)rf[4].g - (int)rf[0].g - (int)rf[8].g);
+					p = abs((int)rf[2].b - (int)rf[6].b) + abs(2*(int)rf[4].g - (int)rf[2].g - (int)rf[6].g);
 
 					if (n < p)
 					{		
